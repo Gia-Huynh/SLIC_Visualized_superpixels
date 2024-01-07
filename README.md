@@ -1,6 +1,5 @@
 # My fork of the OG SLICsuperpixels repo
-The original repo helps visualize the final output of the program's algorithm, I modified the code to also visualize the intermediate steps when it's running.
-Gia.  
+The original repo helps visualize the final output of the program's algorithm, I modified the code to also visualize the intermediate steps when it's running.  
 ![Initialized](Github_Images/0.png?raw=true "0")  
 ![After 8 steps](Github_Images/8.png?raw=true "8")    
 The part below is the OG's repo README.md
