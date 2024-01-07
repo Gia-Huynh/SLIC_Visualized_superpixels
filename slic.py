@@ -3,7 +3,7 @@
 # Winter 2018 - PSU
 
 import numpy
-import sys
+import sys, os
 import cv2
 import tqdm
 
@@ -15,9 +15,46 @@ import tqdm
 # because this algorithm is based on this special case of k-means, 
 # I kept this implementation to stay true to the algorithm.
 
+
+def display_contours(color, image):
+    is_taken = numpy.zeros(image.shape[:2], numpy.bool)
+    contours = []
+
+    for i in range(SLIC_width):
+        for j in range(SLIC_height):
+            nr_p = 0
+            for dx, dy in [(-1,0), (-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1), (-1,1)]:
+                x = i + dx
+                y = j + dy
+                if x>=0 and x < SLIC_width and y>=0 and y < SLIC_height:
+                    if is_taken[y, x] == False and SLIC_clusters[j, i] != SLIC_clusters[y, x]:
+                        nr_p += 1
+                    #end
+                #end
+            #end
+
+            if nr_p >= 2:
+                is_taken[j, i] = True
+                contours.append([j, i])
+            #end
+        #end
+    #end
+    for i in range(len(contours)):
+        image[contours[i][0], contours[i][1]] = color
+    return image
+    #end
+#end
+def displayCenter (filepath, filename, img, centerList):
+    image = img.copy()
+    for a in centerList:
+        image = cv2.circle(image, (int(a[-2]), int(a[-1])), 2, (0,255,0), -1)
+    image = display_contours ([0.0, 0.0, 0.0], image)
+    cv2.imwrite (os.path.join(filepath, filename), image)
+
 def generate_pixels():
     indnp = numpy.mgrid[0:SLIC_height,0:SLIC_width].swapaxes(0,2).swapaxes(0,1)
-    for i in tqdm.tqdm(range(SLIC_ITERATIONS)):
+    for i in tqdm.tqdm(range(SLIC_MAX_ITERATIONS)):
+        displayCenter ("./IterativeDemo/", str(i) + ".png", img, SLIC_centers)
         SLIC_distances = 1 * numpy.ones(img.shape[:2])
         for j in range(SLIC_centers.shape[0]):
             x_low, x_high = int(SLIC_centers[j][3] - step), int(SLIC_centers[j][3] + step)
@@ -52,7 +89,7 @@ def generate_pixels():
             SLIC_distances[y_low : y_high, x_low : x_high] = distance_crop
             SLIC_clusters[y_low : y_high, x_low : x_high][idx] = j
         #end
-
+        old_SLIC_centers = numpy.copy(SLIC_centers)
         for k in range(len(SLIC_centers)):
             idx = (SLIC_clusters == k)
             colornp = SLIC_labimg[idx]
@@ -61,8 +98,12 @@ def generate_pixels():
             sumy, sumx = numpy.sum(distnp, axis=0)
             SLIC_centers[k][3:] = sumx, sumy
             SLIC_centers[k] /= numpy.sum(idx)
+        #print("Example L2 Norm: ", old_SLIC_centers[:,-2:][0]," ", SLIC_centers[:,-2:][0]," ",(old_SLIC_centers - SLIC_centers)[:,-2:][0])
+        #print("Shape L2 Norm: ",numpy.shape (old_SLIC_centers),' ',numpy.shape((old_SLIC_centers - SLIC_centers)[:,-2:]))
+        print("L2 Norm: ", numpy.linalg.norm ((old_SLIC_centers - SLIC_centers)[:,-2:]))
         #end
     #end
+    displayCenter ("./IterativeDemo/", str(i+1) + ".png", img, SLIC_centers)
 #end
 
 # At the end of the process, some stray labels may remain meaning some pixels
@@ -126,33 +167,6 @@ def create_connectivity():
     SLIC_new_clusters = new_clusters
 #end
 
-def display_contours(color):
-    is_taken = numpy.zeros(img.shape[:2], numpy.bool)
-    contours = []
-
-    for i in range(SLIC_width):
-        for j in range(SLIC_height):
-            nr_p = 0
-            for dx, dy in [(-1,0), (-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1), (-1,1)]:
-                x = i + dx
-                y = j + dy
-                if x>=0 and x < SLIC_width and y>=0 and y < SLIC_height:
-                    if is_taken[y, x] == False and SLIC_clusters[j, i] != SLIC_clusters[y, x]:
-                        nr_p += 1
-                    #end
-                #end
-            #end
-
-            if nr_p >= 2:
-                is_taken[j, i] = True
-                contours.append([j, i])
-            #end
-        #end
-    #end
-    for i in range(len(contours)):
-        img[contours[i][0], contours[i][1]] = color
-    #end
-#end
 
 def find_local_minimum(center):
     min_grad = 1
@@ -173,8 +187,8 @@ def find_local_minimum(center):
 
 def calculate_centers():
     centers = []
-    for i in range(step, SLIC_width - int(step/2), step):
-        for j in range(step, SLIC_height - int(step/2), step):
+    for i in range(int(step/2), SLIC_width, step):
+        for j in range(int(step/2), SLIC_height, step):
             nc = find_local_minimum(center=(i, j))
             color = SLIC_labimg[nc[1], nc[0]]
             center = [color[0], color[1], color[2], nc[0], nc[1]]
@@ -190,7 +204,7 @@ img = cv2.imread(sys.argv[1])
 
 step = int((img.shape[0]*img.shape[1]/int(sys.argv[2]))**0.5)
 SLIC_m = int(sys.argv[3])
-SLIC_ITERATIONS = 4
+SLIC_MAX_ITERATIONS = 15
 SLIC_height, SLIC_width = img.shape[:2]
 SLIC_labimg = cv2.cvtColor(img, cv2.COLOR_BGR2LAB).astype(numpy.float64)
 SLIC_distances = 1 * numpy.ones(img.shape[:2])
@@ -202,7 +216,7 @@ SLIC_centers = numpy.array(calculate_centers())
 generate_pixels()
 create_connectivity()
 calculate_centers()
-display_contours([0.0, 0.0, 0.0])
-cv2.imshow("superpixels", img)
-cv2.waitKey(0)
-cv2.imwrite("SLICimg.jpg", img)
+img = display_contours([0.0, 0.0, 0.0], img)
+#cv2.imshow("superpixels", img)
+#cv2.waitKey(0)
+cv2.imwrite("SLICimg.png", img)

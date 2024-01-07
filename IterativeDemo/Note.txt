@@ -1,0 +1,14 @@
+100 40 37 giây cho 8 pass
+200 40 38 giây cho 8 pass
+200 10 41 giây
+
+[Cố định tối đa 15 Iteration, test các combination khác nhau để xem nó có đạt được cực tiểu không
+và kiểm tra L2 Norm trong trường hợp tương ứng]
+200 50 có L2 Norm hạ chậm quá, nhảy liên tục 20 23 21, qua 15 Iter mà center vẫn còn di chuyển nhiều
+200 10 cũng vậy, 22 25
+1000 10 thì liên tục hạ xuống 15
+1000 75 thì xuống 9.
+1000 150 thì xuống 5.96
+
+Tuy nhiên, theo thực nghiệm nhìn thấy khi so sánh giữa 1000 100 và 1000 300 thì với m quá lớn
+như 300 sẽ dẫn tới các superpixel không bám sát vào biên cạnh (vốn được lấy từ dữ liệu màu sắc)
