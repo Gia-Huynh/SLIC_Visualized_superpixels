@@ -1,9 +1,9 @@
 # My fork of the OG SLICsuperpixels repo
 The original repo helps visualize the final output of the program's algorithm, I modified the code to also visualize the intermediate steps when it's running.  
-![Initialized](Github_Images/0.png?raw=true "0")  
-![After 8 steps](Github_Images/8.png?raw=true "8")    
-The part below is the OG's repo README.md
-___________________________________________
+![Gif Demo](Github_Images/SLICK.gif?raw=true "0")  
+(The gif was created using an external program, this code will only output individual images).  
+The part below is the OG's repo README.md  
+___________________________________________  
 # SLICsuperpixels
 Final project for course on computer vision. [SLIC superpixels paper](http://www.kev-smith.com/papers/SLIC_Superpixels.pdf). I found this concept novel, notably for uses in medicine (specifically in medical imaging) but also artistic. Initially I hoped implementing the algorithm and instead of drawing lines indicating the different super pixels, using a Gaussian blur on the seperation lines would create an interesting effect. However, this experiment was underwhelming and excluded from this repository.
 
